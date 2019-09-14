@@ -237,8 +237,6 @@ if __name__ == '__main__':
     argp.add_argument("--no-plots", action="store_true", help="Don't show plots")
     args = argp.parse_args()
 
-    print(args)
-
     p = Parser(args.lang)
     p.parse_file(args.chatfile)
     p.visualize(show_plots=not args.no_plots, save_dir=args.save)
