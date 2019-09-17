@@ -29,7 +29,7 @@ languages = {
         "deleted": r'^This message was deleted$',
         "media": r'^<Media omitted>$',
         "date_format": "%d/%m/%Y, %H:%M",
-        "created": r'^.* created Group "(.*)"$',
+        "created": r'^.* created group "(.*)"$',
         "rename": r'^.* changed the subject from ".*" to "(.*)"$'
     },
     "de": {
@@ -41,6 +41,10 @@ languages = {
         "rename": r'^.* hat den Betreff von „.*“ zu „(.*)“ geändert.$'
     }
 }
+
+
+def truncate(string, length):
+    return string[:length] + (string[length-3:] and "...")
 
 
 class Parser:
@@ -55,7 +59,10 @@ class Parser:
         self.regex_words = re.compile(r"[\w'-]+")
         self.regex_created = re.compile(language['created'])
         self.regex_rename = re.compile(language['rename'])
+        self.regex_emoticon = re.compile(r':\)\)?|\(:|:/|:\||:\(|\):|\^\^|[xX][dD]|:[pP]|:b|:D|D:\b')
         self.date_format = language['date_format']
+
+        self.emoticon_counter = defaultdict(int)
 
         self.date_buffer = None
         self.content_buffer = ""
@@ -63,8 +70,6 @@ class Parser:
 
         self.aliases = aliases if aliases else {}
         self.multipart = multipart
-
-        self.member_msg_count = defaultdict(int)
         self.msgs = []
 
         self.all_words = ""
@@ -94,6 +99,9 @@ class Parser:
             if word not in self.common_words:
                 self.all_words += " " + word
         self.all_words += ". "
+
+        for em in self.regex_emoticon.finditer(body):
+            self.emoticon_counter[em.group(0)] += 1
 
         if multipart:
             self.msgs[-1][2] += len(body)
@@ -174,10 +182,11 @@ class Parser:
     def visualize(self, show_plots=True, save_dir="out"):
         msgs = pd.DataFrame(self.msgs, columns=["member", "date", "body_len", "parts", "initiator"])
         msgs_per_member = msgs.groupby("member").agg({"date": "count", "body_len": "mean", "initiator": "sum"})
+        emoticons = pd.Series(self.emoticon_counter).sort_values(ascending=False).head(10)
 
         prefix = ""
         if self.chat_name:
-            prefix = '"' + self.chat_name[:20] + (self.chat_name[20:] and "...") + '": '
+            prefix = '"' + truncate(self.chat_name, 20) + '": '
 
         def show_and_save(name):
             if save_dir:
@@ -210,6 +219,10 @@ class Parser:
         init_plot.set_ylabel("Initiated Conversations")
         show_and_save("init")
 
+        emoticon_plot = emoticons.plot(kind="bar", color="yellow", rot=0, title=prefix + "Common Emoticons")
+        emoticon_plot.set_ylabel("Total Occurrences")
+        show_and_save("emoticon")
+
         plt.figure(figsize=(16, 5))
         sns.heatmap(heat_pivot, cmap="Greens", cbar=False, annot=True, fmt=".0f")
         plt.title(prefix + "Chat Activity")
@@ -240,4 +253,3 @@ if __name__ == '__main__':
     p = Parser(args.lang)
     p.parse_file(args.chatfile)
     p.visualize(show_plots=not args.no_plots, save_dir=args.save)
-
