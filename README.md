@@ -7,6 +7,7 @@ Creates charts about:
 * Conversations started per chat member
 * Chat activity per hour and day of the week (histogram)
 * Commonly used words (word cloud)
+* Commonly used Emoticons
 
 ### Installation
 * Requires python3
@@ -51,3 +52,16 @@ optional arguments:
   --no-plots      Don't show plots (default: False)
 
 ```
+
+### Screenshots
+
+| ![](https://i.imgur.com/SXFKU8g.png) | ![](https://i.imgur.com/ipfT6B8.png) |
+| ------------------------------------ | ------------------------------------ |
+| ![](https://i.imgur.com/di1KPFD.png) | ![](https://i.imgur.com/ywuKQZZ.png) |
+
+|  ![](https://i.imgur.com/epMtkh5.png)    |
+| ---- |
+|   ![](https://i.imgur.com/rHfDWoo.png)   |
+
+
+
